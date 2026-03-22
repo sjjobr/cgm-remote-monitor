@@ -1,35 +1,433 @@
 
-HudsonBolus
-Loop bolus calculator
-Omnipod Dash
-Dexcom G7
-Loop
-Bolus
-Correction
-Trends
-Settings
-Food & carbs
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<meta name="apple-mobile-web-app-title" content="HudsonBolus" />
+<meta name="theme-color" content="#ffffff" />
+<title>HudsonBolus — Loop Bolus Calculator</title>
+<style>
+html, body { margin: 0 !important; padding: 0 !important; background: #ededea !important; min-height: 100vh !important; }
+@media (prefers-color-scheme: dark) { html, body { background: #2e2e2b !important; } }
 
-Total carbs (g)
+#hudsonbolus, #hudsonbolus * {
+  box-sizing: border-box !important;
+  -webkit-tap-highlight-color: transparent !important;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif !important;
+}
+#hudsonbolus {
+  --hb-bg: #ffffff; --hb-bg2: #f5f5f3; --hb-bg3: #ededea;
+  --hb-text: #1a1a18; --hb-text2: #6b6b67; --hb-text3: #a0a09a;
+  --hb-border: rgba(0,0,0,0.13); --hb-border2: rgba(0,0,0,0.23);
+  --hb-r: 10px; --hb-rl: 14px;
+  --hb-blue: #042C53; --hb-blue-t: #B5D4F4;
+  --hb-green-bg: #E1F5EE; --hb-green-t: #085041; --hb-green: #0F6E56;
+  --hb-amber-bg: #FAEEDA; --hb-amber-t: #633806;
+  --hb-red-bg: #FCEBEB; --hb-red-t: #501313; --hb-red: #A32D2D;
+  --hb-info-bg: #E6F1FB; --hb-info-t: #0C447C; --hb-info-b: #B5D4F4;
+  display: block !important; min-height: 100vh !important;
+  background: var(--hb-bg3) !important; color: var(--hb-text) !important;
+  padding-bottom: 3rem !important; margin: 0 !important;
+}
+@media (prefers-color-scheme: dark) {
+  #hudsonbolus {
+    --hb-bg: #1c1c1a; --hb-bg2: #252522; --hb-bg3: #2e2e2b;
+    --hb-text: #f0f0ec; --hb-text2: #9a9a94; --hb-text3: #606059;
+    --hb-border: rgba(255,255,255,0.10); --hb-border2: rgba(255,255,255,0.22);
+    --hb-blue: #0C447C; --hb-green-bg: #04342C; --hb-green-t: #9FE1CB; --hb-green: #5DCAA5;
+    --hb-amber-bg: #412402; --hb-amber-t: #FAC775;
+    --hb-red-bg: #501313; --hb-red-t: #F7C1C1; --hb-red: #F09595;
+    --hb-info-bg: #042C53; --hb-info-t: #B5D4F4; --hb-info-b: #185FA5;
+  }
+}
 
-Current BG (mg/dL)
+/* HEADER */
+#hb-hdr { background:var(--hb-bg) !important; border-bottom:0.5px solid var(--hb-border) !important; padding:1rem 1.25rem 0 !important; position:sticky !important; top:0 !important; z-index:9999 !important; }
+#hb-hdr-top { display:flex !important; align-items:center !important; justify-content:space-between !important; margin-bottom:10px !important; }
+#hudsonbolus .hb-title { font-size:18px !important; font-weight:700 !important; color:var(--hb-text) !important; line-height:1.2 !important; margin:0 !important; padding:0 !important; background:none !important; border:none !important; display:block !important; }
+#hudsonbolus .hb-sub { font-size:11px !important; color:var(--hb-text2) !important; margin-top:1px !important; display:block !important; }
+#hudsonbolus .hb-pills { display:flex !important; gap:4px !important; flex-wrap:wrap !important; justify-content:flex-end !important; }
+#hudsonbolus .hb-pill { font-size:10px !important; background:var(--hb-bg2) !important; border:0.5px solid var(--hb-border) !important; border-radius:20px !important; padding:3px 8px !important; color:var(--hb-text2) !important; display:inline-block !important; }
 
-Active insulin — IOB (units)
+/* TABS */
+#hb-tabs { display:flex !important; gap:3px !important; background:var(--hb-bg2) !important; border-radius:10px !important; padding:3px !important; margin:0.75rem 0 0 !important; }
+#hb-tabs .hb-tab { flex:1 !important; padding:7px 2px !important; font-size:12px !important; font-weight:400 !important; border:none !important; background:transparent !important; color:var(--hb-text2) !important; cursor:pointer !important; border-radius:8px !important; text-align:center !important; line-height:1.3 !important; outline:none !important; box-shadow:none !important; text-decoration:none !important; margin:0 !important; }
+#hb-tabs .hb-tab.active { background:var(--hb-bg) !important; color:var(--hb-text) !important; font-weight:600 !important; border:0.5px solid var(--hb-border) !important; }
 
-Pre-bolus timing
-            Eating now
-            Pre-bolus 15 min
-            Pre-bolus 30 min
-          
-Food absorption type
-🍭
-Fast
-~2h
-🌮
-Medium
-~3h
-🍕
-Slow
-~5h
-Calculate bolus
-Always verify bolus doses with your endocrinologist. This tool does not replace Loop or medical advice. The Omnipod Dash delivers insulin only when Loop or you command it.
+/* CONTENT */
+#hb-con { padding:1rem 1.25rem !important; max-width:600px !important; margin:0 auto !important; }
+#hudsonbolus .hb-panel { display:none !important; }
+#hudsonbolus .hb-panel.active { display:block !important; }
+
+/* CARD */
+#hudsonbolus .hb-card { background:var(--hb-bg) !important; border:0.5px solid var(--hb-border) !important; border-radius:var(--hb-rl) !important; padding:1rem 1.25rem !important; margin-bottom:10px !important; box-shadow:none !important; }
+#hudsonbolus .hb-ct { font-size:13px !important; font-weight:600 !important; color:var(--hb-text) !important; margin-bottom:10px !important; padding:0 !important; background:none !important; border:none !important; display:block !important; }
+#hudsonbolus .hb-lbl { font-size:11px !important; color:var(--hb-text2) !important; margin-bottom:5px !important; display:block !important; font-weight:400 !important; }
+#hudsonbolus .hb-r2 { display:grid !important; grid-template-columns:1fr 1fr !important; gap:10px !important; margin-bottom:10px !important; }
+#hudsonbolus .hb-r3 { display:grid !important; grid-template-columns:1fr 1fr 1fr !important; gap:8px !important; margin-bottom:10px !important; }
+#hudsonbolus .hb-f { display:flex !important; flex-direction:column !important; }
+
+/* INPUTS */
+#hudsonbolus input[type=number], #hudsonbolus input[type=text], #hudsonbolus select {
+  width:100% !important; padding:9px 10px !important; font-size:15px !important;
+  border:1px solid var(--hb-border2) !important; border-radius:var(--hb-r) !important;
+  background:var(--hb-bg2) !important; color:var(--hb-text) !important;
+  font-family:inherit !important; -webkit-appearance:none !important; appearance:none !important;
+  margin:0 !important; box-shadow:none !important; outline:none !important; line-height:normal !important; display:block !important;
+}
+#hudsonbolus input:focus, #hudsonbolus select:focus { border-color:var(--hb-blue) !important; outline:2px solid var(--hb-blue) !important; outline-offset:-1px !important; }
+
+/* ABSORB */
+#hudsonbolus .hb-abs-wrap { display:flex !important; gap:6px !important; margin-bottom:10px !important; }
+#hudsonbolus .hb-abs { flex:1 !important; padding:8px 4px !important; font-size:12px !important; border:1px solid var(--hb-border2) !important; border-radius:var(--hb-r) !important; background:var(--hb-bg2) !important; color:var(--hb-text2) !important; cursor:pointer !important; text-align:center !important; outline:none !important; box-shadow:none !important; line-height:1.4 !important; margin:0 !important; }
+#hudsonbolus .hb-abs.sel { background:var(--hb-bg) !important; border-color:var(--hb-text) !important; color:var(--hb-text) !important; font-weight:600 !important; }
+#hudsonbolus .hb-abs-icon { font-size:20px !important; display:block !important; margin-bottom:3px !important; }
+
+/* BUTTONS */
+#hudsonbolus .hb-btn { width:100% !important; padding:11px !important; font-size:15px !important; font-weight:600 !important; border:1px solid var(--hb-border2) !important; border-radius:var(--hb-r) !important; background:var(--hb-bg) !important; color:var(--hb-text) !important; cursor:pointer !important; margin-top:8px !important; display:block !important; text-align:center !important; text-decoration:none !important; outline:none !important; box-shadow:none !important; line-height:normal !important; font-family:inherit !important; }
+#hudsonbolus .hb-btn-p { background:var(--hb-blue) !important; color:var(--hb-blue-t) !important; border-color:var(--hb-blue) !important; }
+
+/* RESULT */
+#hudsonbolus .hb-res { border-radius:var(--hb-r) !important; padding:1rem !important; margin-top:10px !important; text-align:center !important; }
+#hudsonbolus .hb-res.ok { background:var(--hb-green-bg) !important; } #hudsonbolus .hb-res.wa { background:var(--hb-amber-bg) !important; } #hudsonbolus .hb-res.da { background:var(--hb-red-bg) !important; } #hudsonbolus .hb-res.ne { background:var(--hb-bg2) !important; }
+#hudsonbolus .hb-rn { font-size:44px !important; font-weight:700 !important; line-height:1 !important; margin:0 !important; padding:0 !important; background:none !important; border:none !important; display:block !important; }
+#hudsonbolus .hb-rn.ok { color:var(--hb-green-t) !important; } #hudsonbolus .hb-rn.wa { color:var(--hb-amber-t) !important; } #hudsonbolus .hb-rn.da { color:var(--hb-red-t) !important; } #hudsonbolus .hb-rn.ne { color:var(--hb-text) !important; }
+#hudsonbolus .hb-rs { font-size:12px !important; margin-top:4px !important; display:block !important; background:none !important; border:none !important; padding:0 !important; }
+#hudsonbolus .hb-rs.ok { color:var(--hb-green) !important; } #hudsonbolus .hb-rs.wa { color:var(--hb-amber-t) !important; } #hudsonbolus .hb-rs.da { color:var(--hb-red) !important; } #hudsonbolus .hb-rs.ne { color:var(--hb-text2) !important; }
+#hudsonbolus .hb-bk { font-size:12px !important; color:var(--hb-text2) !important; margin-top:8px !important; line-height:1.9 !important; background:none !important; border:none !important; padding:0 !important; }
+#hudsonbolus .hb-bk b { color:var(--hb-text) !important; font-weight:600 !important; }
+
+/* ALERTS */
+#hudsonbolus .hb-al { border-radius:var(--hb-r) !important; padding:9px 12px !important; font-size:12px !important; margin-top:8px !important; line-height:1.6 !important; }
+#hudsonbolus .hb-al-d { background:var(--hb-red-bg) !important; color:var(--hb-red) !important; border:0.5px solid var(--hb-red) !important; }
+#hudsonbolus .hb-al-i { background:var(--hb-info-bg) !important; color:var(--hb-info-t) !important; border:0.5px solid var(--hb-info-b) !important; }
+
+/* FOOD */
+#hudsonbolus .hb-fi { width:100% !important; padding:9px 10px !important; font-size:15px !important; border:1px solid var(--hb-border2) !important; border-radius:var(--hb-r) !important; background:var(--hb-bg2) !important; color:var(--hb-text) !important; font-family:inherit !important; margin-bottom:6px !important; display:block !important; box-shadow:none !important; outline:none !important; -webkit-appearance:none !important; }
+#hudsonbolus .hb-fi:focus { border-color:var(--hb-blue) !important; outline:2px solid var(--hb-blue) !important; outline-offset:-1px !important; }
+#hudsonbolus .hb-fl { max-height:220px !important; overflow-y:auto !important; border:0.5px solid var(--hb-border) !important; border-radius:var(--hb-r) !important; margin-bottom:8px !important; background:var(--hb-bg) !important; }
+#hudsonbolus .hb-fr { display:flex !important; justify-content:space-between !important; align-items:center !important; padding:9px 12px !important; border-bottom:0.5px solid var(--hb-border) !important; font-size:13px !important; cursor:pointer !important; background:transparent !important; color:var(--hb-text) !important; text-decoration:none !important; }
+#hudsonbolus .hb-fr:last-child { border-bottom:none !important; }
+#hudsonbolus .hb-fr:active { background:var(--hb-bg2) !important; }
+#hudsonbolus .hb-frest { font-size:10px !important; color:var(--hb-text3) !important; margin-top:1px !important; }
+#hudsonbolus .hb-fc { font-weight:600 !important; color:var(--hb-text2) !important; font-size:12px !important; white-space:nowrap !important; margin-left:8px !important; }
+#hudsonbolus .hb-chips { display:flex !important; flex-wrap:wrap !important; gap:5px !important; margin-bottom:6px !important; }
+#hudsonbolus .hb-chip { display:inline-flex !important; align-items:center !important; gap:5px !important; background:var(--hb-bg2) !important; border:0.5px solid var(--hb-border) !important; border-radius:20px !important; padding:4px 10px !important; font-size:12px !important; color:var(--hb-text) !important; }
+#hudsonbolus .hb-chip button { background:none !important; border:none !important; cursor:pointer !important; color:var(--hb-text3) !important; font-size:15px !important; padding:0 !important; line-height:1 !important; box-shadow:none !important; width:auto !important; height:auto !important; min-width:0 !important; display:inline !important; margin:0 !important; font-family:inherit !important; }
+#hudsonbolus .hb-tl { font-size:12px !important; color:var(--hb-text2) !important; margin-bottom:6px !important; }
+#hudsonbolus .hb-tl b { color:var(--hb-text) !important; font-weight:600 !important; }
+
+/* METRICS */
+#hudsonbolus .hb-metrics { display:grid !important; grid-template-columns:1fr 1fr !important; gap:10px !important; margin-bottom:10px !important; }
+#hudsonbolus .hb-metric { background:var(--hb-bg2) !important; border-radius:var(--hb-r) !important; padding:12px !important; border:none !important; box-shadow:none !important; }
+#hudsonbolus .hb-ml { font-size:11px !important; color:var(--hb-text2) !important; margin-bottom:4px !important; display:block !important; }
+#hudsonbolus .hb-mv { font-size:20px !important; font-weight:600 !important; color:var(--hb-text) !important; display:block !important; margin:0 !important; padding:0 !important; }
+#hudsonbolus .hb-mv.ok { color:var(--hb-green) !important; } #hudsonbolus .hb-mv.wa { color:var(--hb-amber-t) !important; } #hudsonbolus .hb-mv.da { color:var(--hb-red) !important; }
+
+/* NS LINKS */
+#hudsonbolus .hb-nsl { display:flex !important; align-items:center !important; gap:10px !important; background:var(--hb-bg2) !important; border:0.5px solid var(--hb-border) !important; border-radius:var(--hb-r) !important; padding:11px 14px !important; font-size:13px !important; text-decoration:none !important; color:var(--hb-text) !important; margin-bottom:8px !important; }
+#hudsonbolus .hb-nsl:active { background:var(--hb-bg) !important; }
+#hudsonbolus .hb-nsdot { width:9px !important; height:9px !important; border-radius:50% !important; flex-shrink:0 !important; display:inline-block !important; }
+#hudsonbolus .hb-nsarr { margin-left:auto !important; font-size:18px !important; color:var(--hb-text3) !important; line-height:1 !important; }
+#hudsonbolus .hb-nsn { font-weight:600 !important; font-size:13px !important; color:var(--hb-text) !important; display:block !important; }
+#hudsonbolus .hb-nsd { font-size:11px !important; color:var(--hb-text3) !important; display:block !important; margin-top:1px !important; }
+
+/* MISC */
+#hudsonbolus .hb-div { height:0.5px !important; background:var(--hb-border) !important; margin:10px 0 !important; border:none !important; display:block !important; }
+#hudsonbolus .hb-disc { font-size:11px !important; color:var(--hb-text3) !important; margin-top:10px !important; line-height:1.6 !important; padding:0 2px !important; display:block !important; background:none !important; }
+#hudsonbolus .hb-dbs { display:flex !important; flex-wrap:wrap !important; gap:4px !important; margin-bottom:6px !important; }
+#hudsonbolus .hb-db { display:inline-flex !important; align-items:center !important; gap:5px !important; background:var(--hb-bg2) !important; border:0.5px solid var(--hb-border) !important; border-radius:var(--hb-r) !important; padding:5px 10px !important; font-size:11px !important; color:var(--hb-text2) !important; }
+#hudsonbolus .hb-db b { color:var(--hb-text) !important; font-weight:600 !important; }
+#hudsonbolus canvas { display:block !important; width:100% !important; }
+#hudsonbolus p { margin:0 !important; padding:0 !important; background:none !important; border:none !important; }
+#hudsonbolus a { text-decoration:none !important; }
+</style>
+</head>
+<body>
+<div id="hudsonbolus">
+
+<div id="hb-hdr">
+  <div id="hb-hdr-top">
+    <div><span class="hb-title">HudsonBolus</span><span class="hb-sub">Loop bolus calculator</span></div>
+    <div class="hb-pills"><span class="hb-pill">Omnipod Dash</span><span class="hb-pill">Dexcom G7</span><span class="hb-pill">Loop</span></div>
+  </div>
+  <div id="hb-tabs">
+    <button class="hb-tab active" onclick="hbTab('bolus',this)">Bolus</button>
+    <button class="hb-tab" onclick="hbTab('correction',this)">Correction</button>
+    <button class="hb-tab" onclick="hbTab('trends',this)">Trends</button>
+    <button class="hb-tab" onclick="hbTab('settings',this)">Settings</button>
+  </div>
+</div>
+
+<div id="hb-con">
+
+  <!-- BOLUS -->
+  <div id="hbp-bolus" class="hb-panel active">
+    <div class="hb-card" style="margin-top:1rem">
+      <span class="hb-ct">Food &amp; carbs</span>
+      <input class="hb-fi" type="text" placeholder="Search McDonald's, Chipotle, Subway..." oninput="hbFilt(this.value)" id="hb-fs" autocomplete="off" />
+      <div class="hb-fl" id="hb-fl" style="display:none"></div>
+      <div class="hb-chips" id="hb-chips"></div>
+      <div class="hb-tl" id="hb-tl"></div>
+      <div class="hb-r2">
+        <div class="hb-f"><label class="hb-lbl">Total carbs (g)</label><input type="number" id="hb-carbs" min="0" max="400" value="0" inputmode="numeric" oninput="hbCalc()" /></div>
+        <div class="hb-f"><label class="hb-lbl">Current BG (mg/dL)</label><input type="number" id="hb-bg" min="40" max="400" value="110" inputmode="numeric" oninput="hbCalc()" /></div>
+      </div>
+      <div class="hb-r2">
+        <div class="hb-f"><label class="hb-lbl">Active insulin — IOB (units)</label><input type="number" id="hb-iob" min="0" max="20" step="0.05" value="0" inputmode="decimal" oninput="hbCalc()" /></div>
+        <div class="hb-f"><label class="hb-lbl">Pre-bolus timing</label><select id="hb-tim" onchange="hbCalc()"><option value="0">Eating now</option><option value="15">Pre-bolus 15 min</option><option value="30">Pre-bolus 30 min</option></select></div>
+      </div>
+      <label class="hb-lbl" style="margin-bottom:6px">Food absorption type</label>
+      <div class="hb-abs-wrap">
+        <button class="hb-abs sel" onclick="hbAbs(this,2)"><span class="hb-abs-icon">🍭</span>Fast<br><span style="font-size:10px;color:var(--hb-text3)">~2h</span></button>
+        <button class="hb-abs" onclick="hbAbs(this,3)"><span class="hb-abs-icon">🌮</span>Medium<br><span style="font-size:10px;color:var(--hb-text3)">~3h</span></button>
+        <button class="hb-abs" onclick="hbAbs(this,5)"><span class="hb-abs-icon">🍕</span>Slow<br><span style="font-size:10px;color:var(--hb-text3)">~5h</span></button>
+      </div>
+    </div>
+    <div class="hb-card">
+      <div class="hb-al hb-al-d" id="hb-sw" style="display:none">BG is near or below suspend threshold — Loop will restrict insulin. Wait for BG to rise before bolusing.</div>
+      <div class="hb-res ne" id="hb-br" style="display:none">
+        <span class="hb-rn ne" id="hb-bn">0.0</span>
+        <span class="hb-rs ne" id="hb-bs">units suggested</span>
+        <div class="hb-bk" id="hb-bb"></div>
+      </div>
+      <div class="hb-al hb-al-i" id="hb-ln" style="display:none">Loop controls your Omnipod Dash. Enter carbs into the Loop app so it can auto-dose — use this number to pre-bolus or confirm Loop's recommendation.</div>
+      <button class="hb-btn hb-btn-p" onclick="hbShowB()">Calculate bolus</button>
+    </div>
+    <span class="hb-disc">Always verify bolus doses with your endocrinologist. This tool does not replace Loop or medical advice. The Omnipod Dash delivers insulin only when Loop or you command it.</span>
+  </div>
+
+  <!-- CORRECTION -->
+  <div id="hbp-correction" class="hb-panel">
+    <div class="hb-card" style="margin-top:1rem">
+      <span class="hb-ct">Correction calculator</span>
+      <div class="hb-r2">
+        <div class="hb-f"><label class="hb-lbl">Current BG (mg/dL)</label><input type="number" id="hb-cbg" min="40" max="400" value="200" inputmode="numeric" oninput="hbCorr()" /></div>
+        <div class="hb-f"><label class="hb-lbl">Active insulin — IOB</label><input type="number" id="hb-ciob" min="0" max="20" step="0.05" value="0" inputmode="decimal" oninput="hbCorr()" /></div>
+      </div>
+      <div class="hb-res ne" id="hb-cr" style="display:block">
+        <span class="hb-rn ne" id="hb-cn">—</span>
+        <span class="hb-rs ne" id="hb-cs">enter your BG above</span>
+        <div class="hb-bk" id="hb-cb"></div>
+      </div>
+    </div>
+    <div class="hb-card">
+      <span class="hb-ct">How Loop + Omnipod Dash works</span>
+      <p style="font-size:13px;color:var(--hb-text2);line-height:1.7">Loop reads your Dexcom G7 every 5 minutes and predicts BG 6 hours ahead. When high, it tells the Omnipod Dash to increase its temp basal rate. The Dash has no onboard algorithm — Loop is entirely in charge. A manual correction is only needed when Loop is paused or out of Bluetooth range.</p>
+      <div class="hb-div"></div>
+      <p style="font-size:13px;color:var(--hb-text2);line-height:1.7"><b style="color:var(--hb-text);font-weight:600">Suspend threshold:</b> <span id="hb-ss">65</span> mg/dL — Loop stops all insulin below this level.</p>
+    </div>
+    <span class="hb-disc">Always verify correction doses with your endocrinologist. This tool does not replace Loop.</span>
+  </div>
+
+  <!-- TRENDS -->
+  <div id="hbp-trends" class="hb-panel">
+    <div class="hb-metrics" style="margin-top:1rem">
+      <div class="hb-metric"><span class="hb-ml">Current BG</span><span class="hb-mv" id="hb-tbg">— mg/dL</span></div>
+      <div class="hb-metric"><span class="hb-ml">Status</span><span class="hb-mv" id="hb-tst">—</span></div>
+      <div class="hb-metric"><span class="hb-ml">Target range</span><span class="hb-mv ok" id="hb-tr">—</span></div>
+      <div class="hb-metric"><span class="hb-ml">Suspend threshold</span><span class="hb-mv da" id="hb-tsu">—</span></div>
+    </div>
+    <div class="hb-card">
+      <span class="hb-ct">Glucose trend — last 3 hours</span>
+      <canvas id="hb-chart" height="160"></canvas>
+      <p style="font-size:10px;color:var(--hb-text3);margin-top:6px">Simulated curve based on your entered BG. Open HudsonLoop for live Dexcom G7 data.</p>
+    </div>
+    <span class="hb-ct" style="display:block;margin-bottom:8px">Live dashboards</span>
+    <a class="hb-nsl" href="https://hudsonloop.herokuapp.com/" target="_blank">
+      <span class="hb-nsdot" style="background:#0F6E56"></span>
+      <span><span class="hb-nsn">HudsonLoop — Nightscout</span><span class="hb-nsd">Live glucose · IOB · COB · Loop status · bolus history</span></span>
+      <span class="hb-nsarr">›</span>
+    </a>
+    <a class="hb-nsl" href="https://app.tidepool.org" target="_blank">
+      <span class="hb-nsdot" style="background:#185FA5"></span>
+      <span><span class="hb-nsn">Tidepool</span><span class="hb-nsd">Long-term trends · reports for your endocrinologist</span></span>
+      <span class="hb-nsarr">›</span>
+    </a>
+  </div>
+
+  <!-- SETTINGS -->
+  <div id="hbp-settings" class="hb-panel">
+    <div class="hb-card" style="margin-top:1rem">
+      <span class="hb-ct">Device setup</span>
+      <div class="hb-dbs">
+        <div class="hb-db"><b>Pump</b> Omnipod Dash</div>
+        <div class="hb-db"><b>CGM</b> Dexcom G7</div>
+        <div class="hb-db"><b>AID</b> Loop</div>
+        <div class="hb-db"><b>Logs</b> Tidepool</div>
+        <div class="hb-db"><b>Dashboard</b> HudsonLoop</div>
+      </div>
+      <p style="font-size:11px;color:var(--hb-text3);line-height:1.5;margin-top:6px">The Omnipod Dash has no built-in algorithm. Loop reads Dexcom G7 data and sends all basal and bolus commands to the Dash via Bluetooth.</p>
+    </div>
+    <div class="hb-card">
+      <span class="hb-ct">Loop therapy settings</span>
+      <p style="font-size:11px;color:var(--hb-text2);margin-bottom:12px;line-height:1.5">Enter the exact same values as in your Loop app. Settings are saved on this device.</p>
+      <div class="hb-r2">
+        <div class="hb-f"><label class="hb-lbl">ICR — Carb ratio (g per unit)</label><input type="number" id="hb-icr" min="1" max="100" value="10" inputmode="numeric" oninput="hbSave()" /></div>
+        <div class="hb-f"><label class="hb-lbl">ISF — Sensitivity (mg/dL per unit)</label><input type="number" id="hb-isf" min="10" max="300" value="40" inputmode="numeric" oninput="hbSave()" /></div>
+      </div>
+      <div class="hb-r3">
+        <div class="hb-f"><label class="hb-lbl">Correction target</label><input type="number" id="hb-tgt" min="60" max="180" value="105" inputmode="numeric" oninput="hbSave()" /></div>
+        <div class="hb-f"><label class="hb-lbl">High threshold</label><input type="number" id="hb-hi" min="120" max="300" value="180" inputmode="numeric" oninput="hbSave()" /></div>
+        <div class="hb-f"><label class="hb-lbl">Suspend threshold</label><input type="number" id="hb-sus" min="54" max="100" value="65" inputmode="numeric" oninput="hbSave()" /></div>
+      </div>
+      <div class="hb-f"><label class="hb-lbl">Low alert threshold (mg/dL)</label><input type="number" id="hb-lo" min="54" max="100" value="70" inputmode="numeric" oninput="hbSave()" /></div>
+    </div>
+    <span class="hb-disc">Settings must match your endocrinologist-approved Loop configuration. Suspend threshold should be at least 10 mg/dL below your correction target. Changes here do not affect Loop itself.</span>
+  </div>
+
+</div>
+</div><!-- /hudsonbolus -->
+
+<script>
+(function(){
+'use strict';
+const FOODS=[
+  {r:"McDonald's",n:"Big Mac",c:45},{r:"McDonald's",n:"Quarter Pounder Cheese",c:42},{r:"McDonald's",n:"McDouble",c:34},{r:"McDonald's",n:"Filet-O-Fish",c:39},{r:"McDonald's",n:"Medium Fries",c:44},{r:"McDonald's",n:"Large Fries",c:66},{r:"McDonald's",n:"Hash Browns",c:15},{r:"McDonald's",n:"McChicken",c:40},{r:"McDonald's",n:"Egg McMuffin",c:30},{r:"McDonald's",n:"Hotcakes 3pc",c:77},{r:"McDonald's",n:"Vanilla Cone",c:24},{r:"McDonald's",n:"Apple Pie",c:32},{r:"McDonald's",n:"Caramel Frappe Med",c:67},
+  {r:"Burger King",n:"Whopper",c:49},{r:"Burger King",n:"Double Whopper",c:51},{r:"Burger King",n:"Cheeseburger",c:31},{r:"Burger King",n:"Onion Rings Med",c:40},{r:"Burger King",n:"Fries Med",c:43},{r:"Burger King",n:"Chicken Sandwich",c:47},
+  {r:"Subway",n:"6in Italian BMT",c:44},{r:"Subway",n:"12in Italian BMT",c:88},{r:"Subway",n:"6in Tuna",c:44},{r:"Subway",n:"6in Turkey Breast",c:45},{r:"Subway",n:"6in Veggie Delite",c:43},{r:"Subway",n:"Cookie",c:30},{r:"Subway",n:"Footlong Meatball",c:96},
+  {r:"Chipotle",n:"Burrito flour tortilla",c:72},{r:"Chipotle",n:"Burrito Bowl rice beans",c:55},{r:"Chipotle",n:"Soft Tacos 3",c:63},{r:"Chipotle",n:"Chips and Guac",c:73},{r:"Chipotle",n:"Chips only",c:54},{r:"Chipotle",n:"Quesadilla",c:42},
+  {r:"Taco Bell",n:"Crunchy Taco",c:15},{r:"Taco Bell",n:"Soft Taco",c:20},{r:"Taco Bell",n:"Beef Burrito",c:51},{r:"Taco Bell",n:"Chalupa Supreme",c:35},{r:"Taco Bell",n:"Nachos BellGrande",c:81},{r:"Taco Bell",n:"Mexican Pizza",c:56},{r:"Taco Bell",n:"Cheesy Gordita Crunch",c:42},
+  {r:"Chick-fil-A",n:"Original Chicken Sandwich",c:40},{r:"Chick-fil-A",n:"Spicy Chicken Sandwich",c:40},{r:"Chick-fil-A",n:"Nuggets 8pc",c:11},{r:"Chick-fil-A",n:"Waffle Fries Med",c:45},{r:"Chick-fil-A",n:"Mac and Cheese",c:31},{r:"Chick-fil-A",n:"Chocolate Milkshake",c:79},
+  {r:"Panera",n:"Mac and Cheese bowl",c:74},{r:"Panera",n:"Broccoli Cheddar Soup",c:27},{r:"Panera",n:"Plain Bagel",c:59},{r:"Panera",n:"Whole Grain Baguette",c:52},{r:"Panera",n:"Fuji Apple Salad",c:45},{r:"Panera",n:"Cinnamon Crunch Bagel",c:75},
+  {r:"Pizza Hut",n:"Cheese Pizza 2 slices",c:60},{r:"Pizza Hut",n:"Pepperoni 2 slices",c:58},{r:"Pizza Hut",n:"Breadsticks 2",c:38},{r:"Pizza Hut",n:"Stuffed Crust Pepperoni 2 slices",c:72},
+  {r:"Domino's",n:"Cheese Pizza 2 slices",c:52},{r:"Domino's",n:"Pepperoni 2 slices",c:51},{r:"Domino's",n:"Wings 8pc",c:4},{r:"Domino's",n:"Cinnamon Twists",c:49},{r:"Domino's",n:"Cheesy Bread 2pcs",c:36},
+  {r:"Starbucks",n:"Grande Frappuccino",c:65},{r:"Starbucks",n:"Tall Latte",c:19},{r:"Starbucks",n:"Blueberry Muffin",c:64},{r:"Starbucks",n:"Banana Bread",c:57},{r:"Starbucks",n:"Glazed Doughnut",c:44},{r:"Starbucks",n:"Caramel Macchiato Grande",c:35},
+  {r:"Wendy's",n:"Daves Single",c:40},{r:"Wendy's",n:"Baconator",c:37},{r:"Wendy's",n:"Fries Med",c:56},{r:"Wendy's",n:"Chili large",c:32},{r:"Wendy's",n:"Frosty medium",c:57},
+  {r:"KFC",n:"Chicken Breast original",c:11},{r:"KFC",n:"Mashed Potatoes Gravy",c:27},{r:"KFC",n:"Biscuit",c:26},{r:"KFC",n:"Coleslaw",c:26},{r:"KFC",n:"Corn on the Cob",c:37},
+  {r:"Panda Express",n:"Orange Chicken",c:43},{r:"Panda Express",n:"Fried Rice",c:68},{r:"Panda Express",n:"Chow Mein",c:61},{r:"Panda Express",n:"Spring Rolls 2",c:28},{r:"Panda Express",n:"Steamed Rice",c:57},
+  {r:"In-N-Out",n:"Double-Double",c:41},{r:"In-N-Out",n:"Cheeseburger",c:41},{r:"In-N-Out",n:"Fries",c:54},{r:"In-N-Out",n:"Vanilla Shake",c:67},
+  {r:"Olive Garden",n:"Breadstick",c:26},{r:"Olive Garden",n:"Fettuccine Alfredo",c:97},{r:"Olive Garden",n:"Spaghetti Marinara",c:91},{r:"Olive Garden",n:"Minestrone Soup",c:18},
+];
+
+let sel=[],absorb=2;
+let S={icr:10,isf:40,target:105,high:180,low:70,suspend:65};
+
+function g(id){return document.getElementById(id);}
+function loadS(){
+  try{const s=localStorage.getItem('hb3');if(s)S={...S,...JSON.parse(s)};}catch(e){}
+  applyS();
+}
+function applyS(){
+  g('hb-icr').value=S.icr; g('hb-isf').value=S.isf; g('hb-tgt').value=S.target;
+  g('hb-hi').value=S.high; g('hb-lo').value=S.low; g('hb-sus').value=S.suspend;
+  const ss=g('hb-ss'); if(ss)ss.textContent=S.suspend;
+  updM();
+}
+window.hbSave=function(){
+  const map={icr:'hb-icr',isf:'hb-isf',target:'hb-tgt',high:'hb-hi',low:'hb-lo',suspend:'hb-sus'};
+  Object.entries(map).forEach(([k,id])=>{const v=+g(id).value;if(v)S[k]=v;});
+  try{localStorage.setItem('hb3',JSON.stringify(S));}catch(e){}
+  const ss=g('hb-ss');if(ss)ss.textContent=S.suspend;
+  updM();
+};
+window.hbTab=function(name,el){
+  document.querySelectorAll('.hb-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.hb-panel').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');
+  g('hbp-'+name).classList.add('active');
+  if(name==='trends'){updM();setTimeout(drawC,60);}
+};
+window.hbAbs=function(el,h){
+  document.querySelectorAll('.hb-abs').forEach(b=>b.classList.remove('sel'));
+  el.classList.add('sel');absorb=h;
+};
+window.hbFilt=function(q){
+  const fl=g('hb-fl');
+  if(!q.trim()){fl.style.display='none';fl.innerHTML='';return;}
+  const m=FOODS.filter(f=>(f.r+' '+f.n).toLowerCase().includes(q.toLowerCase())).slice(0,12);
+  fl.style.display=m.length?'block':'none';
+  fl.innerHTML=m.map(f=>`<div class="hb-fr" onclick="hbAdd(${FOODS.indexOf(f)})"><div><div>${f.n}</div><div class="hb-frest">${f.r}</div></div><div class="hb-fc">${f.c}g</div></div>`).join('');
+};
+window.hbAdd=function(idx){
+  sel.push({...FOODS[idx]});rendSel();
+  g('hb-fs').value='';
+  const fl=g('hb-fl');fl.style.display='none';fl.innerHTML='';
+};
+window.hbRm=function(i){sel.splice(i,1);rendSel();};
+function rendSel(){
+  const tot=sel.reduce((s,f)=>s+f.c,0);
+  g('hb-chips').innerHTML=sel.map((f,i)=>`<div class="hb-chip">${f.n} <span style="color:var(--hb-text3)">${f.c}g</span><button onclick="hbRm(${i})">×</button></div>`).join('');
+  g('hb-tl').innerHTML=sel.length?`<b>${tot}g carbs</b> from ${sel.length} item(s)`:'';
+  if(sel.length>0)g('hb-carbs').value=tot;
+  hbCalc();
+}
+window.hbCalc=function(){
+  const bg=+g('hb-bg').value||0;
+  const sw=g('hb-sw');
+  if(sw)sw.style.display=(bg>0&&bg<S.suspend+15)?'block':'none';
+};
+window.hbShowB=function(){
+  const bg=+g('hb-bg').value||0,carbs=+g('hb-carbs').value||0,iob=+g('hb-iob').value||0;
+  const mU=carbs/S.icr,cU=Math.max(0,(bg-S.target)/S.isf),tot=Math.max(0,mU+cU-iob);
+  const br=g('hb-br');br.style.display='block';g('hb-ln').style.display='block';
+  const cl=tot===0?'ok':tot>5?'wa':'ne';
+  br.className='hb-res '+cl;
+  const bn=g('hb-bn');bn.className='hb-rn '+cl;bn.textContent=tot.toFixed(1);
+  const bs=g('hb-bs');bs.className='hb-rs '+cl;bs.textContent=tot===0?'no bolus needed':'units suggested';
+  let bd=`<b>${mU.toFixed(1)}u</b> meal (${carbs}g ÷ ${S.icr}) &nbsp;+&nbsp; <b>${cU.toFixed(1)}u</b> correction &nbsp;−&nbsp; <b>${iob.toFixed(2)}u</b> IOB`;
+  if(absorb===5)bd+=`<br>Slow food — consider splitting: part now, part 1–2h later`;
+  if(absorb===2&&+g('hb-tim').value>0)bd+=`<br>Fast food pre-bolus — watch for early lows`;
+  g('hb-bb').innerHTML=bd;
+};
+window.hbCorr=function(){
+  const bg=+g('hb-cbg').value||0,iob=+g('hb-ciob').value||0;
+  const corr=Math.max(0,(bg-S.target)/S.isf-iob);
+  const cr=g('hb-cr'),cn=g('hb-cn'),cs=g('hb-cs'),cb=g('hb-cb');
+  cr.style.display='block';
+  const set=c=>{cr.className='hb-res '+c;cn.className='hb-rn '+c;cs.className='hb-rs '+c;};
+  if(bg<S.suspend){set('da');cn.textContent='LOW';cs.textContent='Treat hypo — Dash will suspend insulin';cb.innerHTML='';}
+  else if(bg<=S.high){set('ok');cn.textContent='0.0';cs.textContent='In range — Loop is managing automatically';cb.innerHTML='';}
+  else{set('wa');cn.textContent=corr.toFixed(1);cs.textContent='units correction suggested';cb.innerHTML=`(${bg} − ${S.target}) ÷ ${S.isf} − <b>${iob.toFixed(2)}u IOB</b>`;}
+};
+function updM(){
+  const bg=+g('hb-bg').value||+g('hb-cbg').value||0;
+  const tr=g('hb-tr'),tsu=g('hb-tsu'),tbg=g('hb-tbg'),tst=g('hb-tst');
+  if(tr)tr.textContent=S.low+'–'+S.high+' mg/dL';
+  if(tsu)tsu.textContent=S.suspend+' mg/dL';
+  if(!tbg)return;
+  if(!bg){tbg.textContent='— mg/dL';tst.textContent='—';tbg.className='hb-mv';tst.className='hb-mv';return;}
+  tbg.textContent=bg+' mg/dL';
+  if(bg<S.suspend){tbg.className='hb-mv da';tst.textContent='Suspend zone';tst.className='hb-mv da';}
+  else if(bg<S.low){tbg.className='hb-mv da';tst.textContent='Low';tst.className='hb-mv da';}
+  else if(bg>S.high){tbg.className='hb-mv wa';tst.textContent='High';tst.className='hb-mv wa';}
+  else{tbg.className='hb-mv ok';tst.textContent='In range';tst.className='hb-mv ok';}
+}
+function drawC(){
+  const canvas=g('hb-chart');if(!canvas)return;
+  const ctx=canvas.getContext('2d');
+  const W=canvas.offsetWidth||340;
+  canvas.width=W*2;canvas.height=320;canvas.style.height='160px';ctx.scale(2,2);
+  const W2=W,H=160;
+  ctx.clearRect(0,0,W2,H);
+  const cur=+g('hb-bg').value||+g('hb-cbg').value||120;
+  const pts=[];
+  for(let i=0;i<18;i++){const n=(Math.random()-.5)*18;pts.push(Math.max(50,Math.min(350,i<9?(cur-25+i*5+n):(cur+(i-9)*2+n))));}
+  pts[17]=cur;
+  const mn=40,mx=360,toX=i=>(i/17)*(W2-36)+18,toY=v=>H-16-((v-mn)/(mx-mn))*(H-32);
+  const dk=window.matchMedia('(prefers-color-scheme:dark)').matches;
+  const gc=dk?'rgba(255,255,255,0.07)':'rgba(0,0,0,0.06)',tc=dk?'rgba(255,255,255,0.28)':'rgba(0,0,0,0.28)';
+  [S.suspend,S.low,S.target,S.high].forEach(v=>{
+    const y=toY(v);ctx.strokeStyle=gc;ctx.lineWidth=0.5;ctx.setLineDash([3,4]);
+    ctx.beginPath();ctx.moveTo(18,y);ctx.lineTo(W2-18,y);ctx.stroke();ctx.setLineDash([]);
+    ctx.fillStyle=tc;ctx.font='10px sans-serif';ctx.textAlign='left';ctx.fillText(v,2,y+3);
+  });
+  ctx.fillStyle=dk?'rgba(15,110,86,0.12)':'rgba(15,110,86,0.08)';
+  ctx.fillRect(18,toY(S.high),W2-36,toY(S.low)-toY(S.high));
+  const lc=cur<S.suspend?'#E24B4A':cur>S.high?'#BA7517':'#0F6E56';
+  ctx.strokeStyle=lc;ctx.lineWidth=2;ctx.lineJoin='round';
+  ctx.beginPath();pts.forEach((v,i)=>i===0?ctx.moveTo(toX(i),toY(v)):ctx.lineTo(toX(i),toY(v)));ctx.stroke();
+  ctx.fillStyle=lc;ctx.beginPath();ctx.arc(toX(17),toY(cur),5,0,Math.PI*2);ctx.fill();
+  ['3h ago','2h','1h','Now'].forEach((l,j)=>{
+    ctx.fillStyle=tc;ctx.font='10px sans-serif';ctx.textAlign='center';
+    ctx.fillText(l,toX([0,6,12,17][j]),H-3);
+  });
+}
+loadS();hbCalc();hbCorr();
+})();
+</script>
+</body>
+</html>
